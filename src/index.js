@@ -12,6 +12,11 @@ class tableResizable {
     this.minFontSize = 12  // 字号最小值，浏览器支持
     this.maxFontSize = 30  // 字号最大值，可自行指定
     this.selects = []  // 被选中的单元格数组
+    this.resizeTr = null  // 被拖动的tr行
+    this.allowResize = false  // 行可被拖动
+    this.mouseStartY = 0  // 鼠标拖动开始y坐标
+    this.mouseEndY = 0  // 鼠标拖动结束y坐标
+    this.resizing = false  // 行是否处于拖动状态
     this.init(id)  // 初始化方法
 
     this.store = {
@@ -265,7 +270,7 @@ class tableResizable {
         ipt.focus()
         ipt.addEventListener('blur', () => {
           td.innerHTML = ipt.value
-          this.clearAllSelected(tds)
+          // this.clearAllSelected(tds)
         })
       })
       td.addEventListener('dragover', (e) => {
@@ -276,6 +281,52 @@ class tableResizable {
           td.innerHTML = this.dragElement.dataset.role
         }
       })
+    })
+    // 为生成的单元行添加事件，以实现拖拽行功能
+    const trs = document.querySelectorAll('tr')
+    trs.forEach((tr) => {
+      tr.addEventListener('mousemove', (e) => {
+        // 鼠标在tr行上面滑过的事件
+        if (tr.id === 'headGroup') {
+          return
+        }
+        const gap = (tr.getBoundingClientRect().top + tr.getBoundingClientRect().height)- e.y
+        if (!this.resizing) {
+          if (gap <= 10) {
+            document.body.style.cursor = 'row-resize'
+            this.allowResize = true
+          } else {
+            document.body.style.cursor = ''
+            this.allowResize = false
+          }
+        } else {
+          document.body.style.cursor = 'row-resize'
+          this.allowResize = true
+        }
+      })
+      const upMethod = (e) => {
+        // 拖动后鼠标松开事件及相关处理
+        this.resizing = false
+        this.allowResize = false
+        document.body.style.cursor = ''
+        this.mouseEndY = e.y
+        this.resizeTr.style.height = parseInt(this.resizeTr.style.height || 0) + (this.mouseEndY - this.mouseStartY) + 'px'
+        
+        this.resizeTr = null
+        // document.removeEventListener('mousedown', downMethod)
+        document.removeEventListener('mouseup', upMethod)
+      }
+
+      const downMethod = (e) => {
+        // 拖动时按下事件及相关处理
+        if (this.allowResize) {
+          this.resizing = true
+          this.mouseStartY = e.y
+          this.resizeTr = tr
+          document.addEventListener('mouseup', upMethod)
+        }
+      }
+      tr.addEventListener('mousedown', downMethod)
     })
   }
 
