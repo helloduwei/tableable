@@ -202,6 +202,10 @@ class tableResizable {
 
   generateHtml(cols, rows) {
     // 创建表格方法
+    if (isNaN(cols) || isNaN(rows)) {
+      alert('请输入正确的行数和列数')
+      return
+    }
     const width = 900/cols
     const g1 = document.querySelector('#g1')
     const g2 = document.querySelector('#g2')
