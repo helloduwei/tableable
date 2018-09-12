@@ -17,6 +17,7 @@ class tableResizable {
     this.mouseStartY = 0  // 鼠标拖动开始y坐标
     this.mouseEndY = 0  // 鼠标拖动结束y坐标
     this.resizing = false  // 行是否处于拖动状态
+    this.allowClick = true  // 点击事件开关，防止mousemove触发click事件
     this.init(id)  // 初始化方法
 
     this.store = {
@@ -249,6 +250,9 @@ class tableResizable {
     const tds = document.querySelectorAll('td')
     tds.forEach((td) => {
       td.addEventListener('click', () => {
+        if (!this.allowClick) {
+          return
+        }
         if (!td.style.backgroundColor) {
           td.style.backgroundColor = '#ddd'
           td.setAttribute('class', 'selected')
@@ -300,6 +304,7 @@ class tableResizable {
             this.allowResize = false
           }
         } else {
+          this.allowClick = false
           document.body.style.cursor = 'row-resize'
           this.allowResize = true
         }
@@ -313,12 +318,12 @@ class tableResizable {
         this.resizeTr.style.height = parseInt(this.resizeTr.style.height || 0) + (this.mouseEndY - this.mouseStartY) + 'px'
         
         this.resizeTr = null
-        // document.removeEventListener('mousedown', downMethod)
         document.removeEventListener('mouseup', upMethod)
       }
 
       const downMethod = (e) => {
         // 拖动时按下事件及相关处理
+        this.allowClick = true
         if (this.allowResize) {
           this.resizing = true
           this.mouseStartY = e.y
@@ -370,7 +375,7 @@ class tableResizable {
     isRect = this.isRect(selectedItem)
     
     if (combined) {
-      alert('请不需要选择合并过的单元格')
+      alert('请不要选择合并过的单元格')
       return
     }
 
