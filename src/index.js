@@ -84,7 +84,7 @@ class tableResizable {
 
     //拖动时的占位线
     const hold = document.createElement('div');
-    hold.style = 'position: absolute; left: 200px; top: 0; bottom: 0; width: 0; border-left: 1px solid rgb(223, 230, 236); z-index: 10; display: none;'
+    hold.style = 'position: absolute; left: 200px; top: 0; bottom: 0; width: 0; border-left: 1px solid rgba(3, 169, 244, 0.7); z-index: 10; display: none;'
     this._el.appendChild(hold);
 
     // 把cols缓存起来
@@ -120,7 +120,7 @@ class tableResizable {
         document.onselectstart = () => false;
         document.ondragstart = () => false;
 
-        // hold.style.display = 'block';
+        hold.style.display = 'block';
         hold.style.left = this.store.startLeft + 'px';
 
         const handleOnMouseMove = (event) => {
@@ -309,8 +309,13 @@ class tableResizable {
           this.allowResize = true
         }
       })
+
+      const horizontally =  document.createElement('div');
+          horizontally.style = 'position: absolute; left: 0; top: 0; height: 0; width: 100%; border-top: 1px solid rgba(3, 169, 244, 0.7); z-index: 10; display: none;';
+      this._el.appendChild(horizontally);
+
       const upMethod = (e) => {
-        // 拖动后鼠标松开事件及相关处理
+        // 拖动后鼠标松开事件及相关处理, 竖向拖动结束
         this.resizing = false
         this.allowResize = false
         document.body.style.cursor = ''
@@ -318,19 +323,31 @@ class tableResizable {
         this.resizeTr.style.height = parseInt(this.resizeTr.style.height || 0) + (this.mouseEndY - this.mouseStartY) + 'px'
         
         this.resizeTr = null
+        horizontally.style.display = 'none'
         document.removeEventListener('mouseup', upMethod)
+        document.removeEventListener('mousemove', moveMethod)
       }
 
       const downMethod = (e) => {
         // 拖动时按下事件及相关处理
         this.allowClick = true
         if (this.allowResize) {
+          // 竖向拖动开始
+          horizontally.style.top = e.y - this._el.getBoundingClientRect().top + 'px';
+          horizontally.style.display = 'block';
+
           this.resizing = true
           this.mouseStartY = e.y
           this.resizeTr = tr
+          document.addEventListener('mousemove', moveMethod)
           document.addEventListener('mouseup', upMethod)
         }
       }
+
+      const moveMethod = (e)=> {
+        horizontally.style.top = e.y - this._el.getBoundingClientRect().top + 'px'
+      }
+
       tr.addEventListener('mousedown', downMethod)
     })
   }
@@ -521,10 +538,10 @@ class tableResizable {
   }
 
   init(id) {
+    this._el = document.querySelector(`#${id}`);
     this.generateDraggableElement()
     this.generateFonts()
     this.createTable().then(() => {
-      this._el = document.querySelector(`#${id}`);
       this._tables = Array.from(this._el.querySelectorAll('table'));
       setTimeout(() => this._resolveDom());
     })
